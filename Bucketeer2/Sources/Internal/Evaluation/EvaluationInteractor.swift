@@ -60,12 +60,8 @@ final class EvaluationInteractor {
         }
     }
 
-    func refreshCache(userId: String) {
-        do {
-            evaluations[userId] = try evaluationDao.get(userId: userId)
-        } catch let error {
-            logger?.error(error)
-        }
+    func refreshCache(userId: String) throws {
+        evaluations[userId] = try evaluationDao.get(userId: userId)
     }
 
     func getLatest(userId: String, featureId: String) -> Evaluation? {
