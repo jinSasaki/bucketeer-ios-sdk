@@ -2,8 +2,8 @@ import Foundation
 @testable import Bucketeer2
 
 final class MockApiClient: ApiClient {
-    typealias GetEvaluationsHandler = ((JSON.User, String, Int64?, ((Result<GetEvaluationsResponse, Error>) -> Void)?)) -> Void
-    typealias RegisterEventsHandler = ([Event], ((Result<RegisterEventsResponse, Error>) -> Void)?) -> Void
+    typealias GetEvaluationsHandler = ((JSON.User, String, Int64?, ((GetEvaluationsResult) -> Void)?)) -> Void
+    typealias RegisterEventsHandler = ([Event], ((Result<RegisterEventsResponse, BKTError>) -> Void)?) -> Void
 
     let getEvaluationsHandler: GetEvaluationsHandler?
     let registerEventsHandler: RegisterEventsHandler?
@@ -15,11 +15,11 @@ final class MockApiClient: ApiClient {
         self.registerEventsHandler = registerEventsHandler
     }
 
-    func getEvaluations(user: JSON.User, userEvaluationsId: String, timeoutMillis: Int64?, completion: ((Result<GetEvaluationsResponse, Error>) -> Void)?) {
+    func getEvaluations(user: JSON.User, userEvaluationsId: String, timeoutMillis: Int64?, completion: ((GetEvaluationsResult) -> Void)?) {
         getEvaluationsHandler?((user, userEvaluationsId, timeoutMillis, completion))
     }
 
-    func registerEvents(events: [Event], completion: ((Result<RegisterEventsResponse, Error>) -> Void)?) {
+    func registerEvents(events: [Event], completion: ((Result<RegisterEventsResponse, BKTError>) -> Void)?) {
         registerEventsHandler?(events, completion)
     }
 }

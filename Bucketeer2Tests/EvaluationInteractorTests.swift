@@ -37,7 +37,7 @@ final class EvaluationInteractorTests: XCTestCase {
             switch result {
             case .success(let response):
                 XCTAssertEqual(response.data.user_evaluations_id, user_evaluations_id)
-            case .failure(let error):
+            case .failure(let error, _):
                 XCTFail("\(error)")
             }
 
@@ -113,7 +113,7 @@ final class EvaluationInteractorTests: XCTestCase {
                 switch result {
                 case .success(let response):
                     XCTAssertEqual(response.data.user_evaluations_id, user_evaluations_id_updated)
-                case .failure(let error):
+                case .failure(let error, _):
                     XCTFail("\(error)")
                 }
 
@@ -169,7 +169,7 @@ final class EvaluationInteractorTests: XCTestCase {
                 switch result {
                 case .success(let response):
                     XCTAssertEqual(response.data.user_evaluations_id, user_evaluations_id)
-                case .failure(let error):
+                case .failure(let error, _):
                     XCTFail("\(error)")
                 }
 
