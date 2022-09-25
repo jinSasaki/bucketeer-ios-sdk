@@ -23,119 +23,125 @@ final class EventInteractor {
         self.eventUpdateListener = eventUpdateListener
     }
 
-    func trackEvaluationEvent(featureTag: String, user: JSON.User, evaluation: Evaluation) {
-        do {
-            try eventDao.add(
-                event: .init(
-                    id: idGenerator.id(),
-                    event: .evaluation(.init(
-                        timestamp: clock.currentTimeSeconds,
-                        feature_id: evaluation.feature_id,
-                        feature_version: evaluation.feature_version,
-                        user_id: user.id,
-                        variation_id: evaluation.variation_id,
-                        user: user,
-                        reason: evaluation.reason,
-                        tag: featureTag,
-                        source_id: .ios
-                    )),
-                    type: .evaluation
-                )
+    func trackEvaluationEvent(featureTag: String, user: JSON.User, evaluation: Evaluation) throws {
+        try eventDao.add(
+            event: .init(
+                id: idGenerator.id(),
+                event: .evaluation(.init(
+                    timestamp: clock.currentTimeSeconds,
+                    feature_id: evaluation.feature_id,
+                    feature_version: evaluation.feature_version,
+                    user_id: user.id,
+                    variation_id: evaluation.variation_id,
+                    user: user,
+                    reason: evaluation.reason,
+                    tag: featureTag,
+                    source_id: .ios
+                )),
+                type: .evaluation
             )
-            updateEventsAndNotify()
-        } catch let error {
-            logger?.error(error)
-        }
+        )
+        updateEventsAndNotify()
     }
 
-    func trackDefaultEvaluationEvent(featureTag: String, user: JSON.User, featureId: String) {
-        do {
-            try eventDao.add(
-                event: .init(
-                    id: idGenerator.id(),
-                    event: .evaluation(.init(
-                        timestamp: clock.currentTimeSeconds,
-                        feature_id: featureId,
-                        user_id: user.id,
-                        user: user,
-                        reason: .init(type: .client),
-                        tag: featureTag,
-                        source_id: .ios
-                    )),
-                    type: .evaluation
-                )
+    func trackDefaultEvaluationEvent(featureTag: String, user: JSON.User, featureId: String) throws {
+        try eventDao.add(
+            event: .init(
+                id: idGenerator.id(),
+                event: .evaluation(.init(
+                    timestamp: clock.currentTimeSeconds,
+                    feature_id: featureId,
+                    user_id: user.id,
+                    user: user,
+                    reason: .init(type: .client),
+                    tag: featureTag,
+                    source_id: .ios
+                )),
+                type: .evaluation
             )
-            updateEventsAndNotify()
-        } catch let error {
-            logger?.error(error)
-        }
+        )
+        updateEventsAndNotify()
     }
 
-    func trackGoalEvent(featureTag: String, user: JSON.User, goalId: String, value: Double) {
-        do {
-            try eventDao.add(
-                event: .init(
-                    id: idGenerator.id(),
-                    event: .goal(.init(
-                        timestamp: clock.currentTimeSeconds,
-                        goal_id: goalId,
-                        user_id: user.id,
-                        value: value,
-                        user: user,
-                        tag: featureTag,
-                        source_id: .ios
-                    )),
-                    type: .goal
-                )
+    func trackGoalEvent(featureTag: String, user: JSON.User, goalId: String, value: Double) throws {
+        try eventDao.add(
+            event: .init(
+                id: idGenerator.id(),
+                event: .goal(.init(
+                    timestamp: clock.currentTimeSeconds,
+                    goal_id: goalId,
+                    user_id: user.id,
+                    value: value,
+                    user: user,
+                    tag: featureTag,
+                    source_id: .ios
+                )),
+                type: .goal
             )
-            updateEventsAndNotify()
-        } catch let error {
-            logger?.error(error)
-        }
+        )
+        updateEventsAndNotify()
     }
 
-    func trackFetchEvaluationsSuccess(featureTag: String, seconds: Int64, sizeByte: Int) {
-        do {
-            try eventDao.add(
-                events: [
-                    .init(
-                        id: idGenerator.id(),
-                        event: .metrics(.init(
-                            timestamp: clock.currentTimeSeconds,
-                            event: .getEvaluationLatency(.init(
-                                labels: ["tag": featureTag],
-                                duration: .init(seconds: seconds)
-                            )),
-                            type: .getEvaluationLatency
+    func trackFetchEvaluationsSuccess(featureTag: String, seconds: Int64, sizeByte: Int) throws {
+        try eventDao.add(
+            events: [
+                .init(
+                    id: idGenerator.id(),
+                    event: .metrics(.init(
+                        timestamp: clock.currentTimeSeconds,
+                        event: .getEvaluationLatency(.init(
+                            labels: ["tag": featureTag],
+                            duration: .init(seconds: seconds)
                         )),
-                        type: .metrics
-                    ),
-                    .init(
-                        id: idGenerator.id(),
-                        event: .metrics(.init(
-                            timestamp: clock.currentTimeSeconds,
-                            event: .getEvaluationSize(.init(
-                                labels: ["tag": featureTag],
-                                size_byte: sizeByte
-                            )),
-                            type: .getEvaluationLatency
+                        type: .getEvaluationLatency
+                    )),
+                    type: .metrics
+                ),
+                .init(
+                    id: idGenerator.id(),
+                    event: .metrics(.init(
+                        timestamp: clock.currentTimeSeconds,
+                        event: .getEvaluationSize(.init(
+                            labels: ["tag": featureTag],
+                            size_byte: sizeByte
                         )),
-                        type: .metrics
-                    ),
-                ]
-            )
-            updateEventsAndNotify()
-        } catch let error {
-            logger?.error(error)
-        }
+                        type: .getEvaluationSize
+                    )),
+                    type: .metrics
+                ),
+            ]
+        )
+        updateEventsAndNotify()
     }
 
-    // TODO: implements trackFetchEvaluationsFailure
+    func trackFetchEvaluationsFailure(featureTag: String, error: BKTError) throws {
+
+        let metricsEventData: JSON.MetricsEventData
+        let metricsEventType: JSON.MetricsEventType
+        switch error {
+        case .timeout:
+            metricsEventData = .timeoutErrorCount(.init(tag: featureTag))
+            metricsEventType = .timeoutErrorCount
+        default:
+            metricsEventData = .internalErrorCount(.init(tag: featureTag))
+            metricsEventType = .internalErrorCount
+        }
+        try eventDao.add(event: .init(
+            id: idGenerator.id(),
+            event: .metrics(.init(
+                timestamp: clock.currentTimeSeconds,
+                event: metricsEventData,
+                type: metricsEventType
+            )),
+            type: .metrics
+        ))
+        updateEventsAndNotify()
+    }
 
     func sendEvents(force: Bool = false, completion: ((Result<Bool, Error>) -> Void)?) {
         do {
             let currentEvents = try eventDao.getEvents()
-            guard currentEvents.isEmpty else {
+            guard !currentEvents.isEmpty else {
                 logger?.debug(message: "no events to register")
                 completion?(.success(false))
                 return
