@@ -188,7 +188,7 @@ final class EvaluationInteractorTests: XCTestCase {
         wait(for: [expectation], timeout: 1)
     }
 
-    func testRefrechCache() {
+    func testRefrechCache() throws {
         let api = MockApiClient()
 
         let userId1 = JSON.User.mock1.id
@@ -215,14 +215,14 @@ final class EvaluationInteractorTests: XCTestCase {
         XCTAssertEqual(interactor.evaluations[userId1], nil)
         XCTAssertEqual(interactor.evaluations[userId2], nil)
 
-        interactor.refreshCache(userId: userId1)
+        try interactor.refreshCache(userId: userId1)
         XCTAssertEqual(interactor.evaluations[userId1], [.mock1, .mock2])
 
-        interactor.refreshCache(userId: userId2)
+        try interactor.refreshCache(userId: userId2)
         XCTAssertEqual(interactor.evaluations[userId2], [.mock3])
     }
 
-    func testGetLatestWithCache() {
+    func testGetLatestWithCache() throws {
         let api = MockApiClient()
 
         let userId1 = JSON.User.mock1.id
@@ -246,7 +246,7 @@ final class EvaluationInteractorTests: XCTestCase {
             defaults: defaults
         )
 
-        interactor.refreshCache(userId: userId1)
+        try interactor.refreshCache(userId: userId1)
 
         XCTAssertEqual(interactor.getLatest(userId: userId1, featureId: Evaluation.mock1.feature_id), .mock1)
     }
