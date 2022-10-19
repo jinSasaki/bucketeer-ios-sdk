@@ -146,6 +146,15 @@ final class BucketeerE2ETests: XCTestCase {
         ))
     }
 
+    func testTrack() async throws {
+        let client = BKTClient.shared
+        client.assert(expectedEventCount: 2)
+        client.track(goalId: GOAL_ID, value: GOAL_VALUE)
+        client.assert(expectedEventCount: 3)
+        try await client.flush()
+        client.assert(expectedEventCount: 0)
+    }
+
     func testRegisterEvents() {
 
     }

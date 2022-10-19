@@ -62,6 +62,25 @@ extension BKTClient {
             }
         }
     }
+
+    func flush() async throws {
+        return try await withCheckedThrowingContinuation({ continuation in
+            self.flush { error in
+                if let error = error{
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        })
+    }
+
+    func assert(expectedEventCount: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let component = self.component as? ComponentImpl
+        let count = try? component?.dataModule.eventDao.getEvents().count
+        XCTAssertEqual(expectedEventCount, count, file: file, line: line)
+
+    }
 }
 
 struct BKTEvaluationExpected {
